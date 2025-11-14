@@ -18,18 +18,6 @@ cd crdp_cli_go
 go build -o crdp-cli ./cmd/crdp-cli
 ```
 
-### 사전 컴파일된 바이너리
-
-```bash
-# macOS
-curl -LO https://github.com/sjrhee/crdp_cli_go/releases/latest/download/crdp-cli-darwin-amd64
-chmod +x crdp-cli-darwin-amd64
-
-# Linux
-curl -LO https://github.com/sjrhee/crdp_cli_go/releases/latest/download/crdp-cli-linux-amd64
-chmod +x crdp-cli-linux-amd64
-```
-
 ## 사용법
 
 ### 기본 실행
