@@ -19,10 +19,11 @@ type APIResponse struct {
 
 // Client는 CRDP API 클라이언트입니다
 type Client struct {
-	baseURL string
-	policy  string
-	timeout time.Duration
-	client  *http.Client
+	baseURL  string
+	policy   string
+	timeout  time.Duration
+	client   *http.Client
+	showBody bool
 }
 
 // NewClient는 새로운 CRDP 클라이언트를 생성합니다
@@ -59,11 +60,17 @@ func NewClient(host string, port int, policy string, timeoutSec int, useTLS bool
 	}
 
 	return &Client{
-		baseURL: baseURL,
-		policy:  policy,
-		timeout: time.Duration(timeoutSec) * time.Second,
-		client:  httpClient,
+		baseURL:  baseURL,
+		policy:   policy,
+		timeout:  time.Duration(timeoutSec) * time.Second,
+		client:   httpClient,
+		showBody: false,
 	}
+}
+
+// SetShowBody는 요청/응답 본문 출력 여부를 설정합니다
+func (c *Client) SetShowBody(show bool) {
+	c.showBody = show
 }
 
 // PostJSON은 JSON 페이로드로 POST 요청을 보냅니다
@@ -74,6 +81,13 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
+	}
+
+	// show-body 옵션이 활성화된 경우 요청 정보 출력
+	if c.showBody {
+		method := "POST"
+		fmt.Printf("\n%s %s\n", method, url)
+		fmt.Printf("%s\n", string(body))
 	}
 
 	// POST 요청 생성
@@ -106,6 +120,13 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 		}
 	}
 
+	// show-body 옵션이 활성화된 경우 응답 정보 출력
+	if c.showBody {
+		statusText := resp.Status
+		fmt.Printf("%s\n", statusText)
+		fmt.Printf("%s\n", string(respBody))
+	}
+
 	return &APIResponse{
 		StatusCode: resp.StatusCode,
 		Body:       data,
@@ -128,4 +149,30 @@ func (c *Client) Reveal(protectedData string) (*APIResponse, error) {
 		"protection_policy_name": c.policy,
 	}
 	return c.PostJSON("/v1/reveal", payload)
+}
+
+// ProtectBulk는 여러 데이터를 한 번에 보호합니다 (Thales API 형식)
+func (c *Client) ProtectBulk(dataList []string) (*APIResponse, error) {
+	payload := map[string]interface{}{
+		"protection_policy_name": c.policy,
+		"data_array":             dataList,
+	}
+	return c.PostJSON("/v1/protectbulk", payload)
+}
+
+// RevealBulk은 여러 보호된 데이터를 한 번에 복원합니다 (Thales API 형식)
+func (c *Client) RevealBulk(protectedDataList []string) (*APIResponse, error) {
+	// protected_data_array 형태로 구성
+	pdArray := make([]map[string]interface{}, len(protectedDataList))
+	for i, pd := range protectedDataList {
+		pdArray[i] = map[string]interface{}{
+			"protected_data": pd,
+		}
+	}
+
+	payload := map[string]interface{}{
+		"protection_policy_name": c.policy,
+		"protected_data_array":   pdArray,
+	}
+	return c.PostJSON("/v1/revealbulk", payload)
 }
