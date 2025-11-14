@@ -21,6 +21,56 @@ func incrementNumericString(s string) (string, error) {
 	return fmt.Sprintf("%d", n+1), nil
 }
 
+// generateDataSequence generates a sequence of data strings starting from startData
+func generateDataSequence(startData string, count int, verbose bool) []string {
+	inputs := make([]string, 0, count)
+	currentData := startData
+	for i := 0; i < count; i++ {
+		inputs = append(inputs, currentData)
+		if i < count-1 {
+			nextData, err := incrementNumericString(currentData)
+			if err != nil {
+				if verbose {
+					log.Printf("Cannot increment data '%s': %v", currentData, err)
+				}
+				break
+			}
+			currentData = nextData
+		}
+	}
+	return inputs
+}
+
+// printSummary prints execution summary
+func printSummary(attempted, successful, matched int, totalTime time.Duration) {
+	fmt.Printf("\nSummary:\n")
+	fmt.Printf("Iterations attempted: %d\n", attempted)
+	fmt.Printf("Successful (both 2xx): %d\n", successful)
+	fmt.Printf("Revealed matched original data: %d\n", matched)
+	fmt.Printf("Total time: %.4fs\n", totalTime.Seconds())
+	if attempted > 0 {
+		avgTime := totalTime.Seconds() / float64(attempted)
+		fmt.Printf("Average per-iteration time: %.4fs\n", avgTime)
+	}
+}
+
+// printBulkProgress prints progress for bulk mode
+func printBulkProgress(batchNum, batchSize int, timeS float64, protectStatus, revealStatus, matched int) {
+	fmt.Fprintf(os.Stderr, "Batch #%03d size=%d time=%.4fs protect_status=%d reveal_status=%d matched=%d\n",
+		batchNum, batchSize, timeS, protectStatus, revealStatus, matched)
+}
+
+// printIterationProgress prints progress for single iteration mode
+func printIterationProgress(iterNum int, data string, timeS float64, protectStatus, revealStatus int, match bool, withBlankLine bool) {
+	if withBlankLine {
+		fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
+			iterNum, data, timeS, protectStatus, revealStatus, match)
+	} else {
+		fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n",
+			iterNum, data, timeS, protectStatus, revealStatus, match)
+	}
+}
+
 func main() {
 	// CLI 플래그 정의
 	host := flag.String("host", "192.168.0.231", "API host")
@@ -74,22 +124,7 @@ func main() {
 
 	if *useBulk {
 		// Bulk 모드: 입력 데이터 생성
-		inputs := make([]string, *iterations)
-		currentData := *startData
-		for i := 0; i < *iterations; i++ {
-			inputs[i] = currentData
-			// 다음 데이터 생성 (숫자 증가)
-			if i < *iterations-1 {
-				nextData, err := incrementNumericString(currentData)
-				if err != nil {
-					if *verbose {
-						log.Printf("Cannot increment data '%s': %v", currentData, err)
-					}
-					break
-				}
-				currentData = nextData
-			}
-		}
+		inputs := generateDataSequence(*startData, *iterations, *verbose)
 
 		// 배치 단위로 처리
 		for i := 0; i < len(inputs); i += *batchSize {
@@ -123,20 +158,19 @@ func main() {
 			matchedItems += result.MatchedCount
 
 			if *showProgress {
-				fmt.Fprintf(os.Stderr, "Batch #%03d size=%d time=%.4fs protect_status=%d reveal_status=%d matched=%d\n",
-					i/ *batchSize+1, len(batch), result.TimeS,
+				printBulkProgress(i/ *batchSize+1, len(batch), result.TimeS,
 					result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.MatchedCount)
 			}
 		}
 	} else {
 		// 일반 모드 (단일 처리)
-		currentData := *startData
-		for i := 1; i <= *iterations; i++ {
-			data := currentData
+		dataSequence := generateDataSequence(*startData, *iterations, *verbose)
+		for i, data := range dataSequence {
+			iterNum := i + 1
 			result, err := runner.RunIteration(c, data)
 			if err != nil {
 				if *verbose {
-					log.Printf("Error at iteration %d: %v", i, err)
+					log.Printf("Error at iteration %d: %v", iterNum, err)
 				}
 				continue
 			}
@@ -151,25 +185,9 @@ func main() {
 			}
 
 			if *showProgress {
-				if *showBody {
-					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
-						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
-				} else {
-					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n",
-						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
-				}
-			}
-
-			// 다음 데이터 생성
-			if i < *iterations {
-				nextData, err := incrementNumericString(currentData)
-				if err != nil {
-					if *verbose {
-						log.Printf("Cannot increment data '%s': %v", currentData, err)
-					}
-					break
-				}
-				currentData = nextData
+				printIterationProgress(iterNum, data, result.TimeS,
+					result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode,
+					result.Match, *showBody)
 			}
 		}
 	}
@@ -177,24 +195,9 @@ func main() {
 	total := time.Since(startTime)
 
 	// 결과 출력
-	fmt.Printf("\nSummary:\n")
 	if *useBulk {
-		fmt.Printf("Iterations attempted: %d\n", totalItems)
-		fmt.Printf("Successful (both 2xx): %d\n", successfulItems)
-		fmt.Printf("Revealed matched original data: %d\n", matchedItems)
-		fmt.Printf("Total time: %.4fs\n", total.Seconds())
-		if totalItems > 0 {
-			avgTime := sumBatchTimes / float64(totalItems)
-			fmt.Printf("Average per-iteration time: %.4fs\n", avgTime)
-		}
+		printSummary(totalItems, successfulItems, matchedItems, total)
 	} else {
-		fmt.Printf("Iterations attempted: %d\n", len(results))
-		fmt.Printf("Successful (both 2xx): %d\n", successfulItems)
-		fmt.Printf("Revealed matched original data: %d\n", matchedItems)
-		fmt.Printf("Total time: %.4fs\n", total.Seconds())
-		if len(results) > 0 {
-			avgTime := total.Seconds() / float64(len(results))
-			fmt.Printf("Average per-iteration time: %.4fs\n", avgTime)
-		}
+		printSummary(len(results), successfulItems, matchedItems, total)
 	}
 }
