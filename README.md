@@ -46,26 +46,38 @@ chmod +x crdp-cli-linux-amd64
 
 | 옵션 | 설명 | 기본값 |
 |------|------|--------|
-| `-host` | API 호스트 주소 | 192.168.0.231 |
-| `-port` | API 포트 번호 | 32082 |
-| `-policy` | 보호 정책 이름 | P03 |
-| `-start-data` | 시작 데이터 | 1234567890123 |
-| `-iterations` | 반복 횟수 | 100 |
-| `-timeout` | 요청 타임아웃 (초) | 10 |
-| `-tls` | HTTPS 사용 | false |
-| `-verbose` | 상세 로그 출력 | false |
+| `--host` | API 호스트 주소 | 192.168.0.231 |
+| `--port` | API 포트 번호 | 32082 |
+| `--policy` | 보호 정책 이름 | P03 |
+| `--iterations` | 반복 횟수 | 100 |
+| `--timeout` | 요청 타임아웃 (초) | 10 |
+| `--tls` | HTTPS 사용 | false |
+| `--verbose` | 상세 로그 출력 | false |
+| `--show-progress` | 반복별 진행 상황 출력 | false |
+| `--show-body` | HTTP 요청/응답 본문 출력 (자동으로 show-progress 활성화) | false |
+| `--bulk` | 대량 처리 API 사용 (protectbulk/revealbulk) | false |
+| `--batch-size` | 대량 처리 시 배치 크기 | 50 |
 
 ### 사용 예시
 
 ```bash
+# 기본 실행 (100회)
+./crdp-cli
+
 # HTTPS로 1000회 실행
-./crdp-cli -tls -port 32182 -iterations 1000
+./crdp-cli --tls --port 32182 --iterations 1000
 
 # 다른 호스트에 연결
-./crdp-cli -host 192.168.0.233 -port 32082
+./crdp-cli --host 192.168.0.233 --port 32082
 
-# 상세 로그와 함께 실행
-./crdp-cli -verbose -iterations 10
+# 진행 상황 확인
+./crdp-cli --iterations 10 --show-progress
+
+# HTTP 요청/응답 본문 확인
+./crdp-cli --iterations 3 --show-body
+
+# 대량 처리 모드 (배치 크기 100)
+./crdp-cli --bulk --batch-size 100 --iterations 1000
 ```
 
 ## 프로젝트 구조
