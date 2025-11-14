@@ -59,10 +59,10 @@ chmod +x crdp-cli-linux-amd64
 
 ```bash
 # HTTPS로 1000회 실행
-./crdp-cli -tls -iterations 1000
+./crdp-cli -tls -port 32182 -iterations 1000
 
 # 다른 호스트에 연결
-./crdp-cli -host 192.168.0.233 -port 8080
+./crdp-cli -host 192.168.0.233 -port 32082
 
 # 상세 로그와 함께 실행
 ./crdp-cli -verbose -iterations 10
