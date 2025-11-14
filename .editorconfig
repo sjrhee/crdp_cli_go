@@ -1,0 +1,37 @@
+# EditorConfig은 다양한 에디터와 IDE에서 일관된 코딩 스타일을 유지하는 데 도움이 됩니다.
+# https://editorconfig.org
+
+root = true
+
+# 모든 파일
+[*]
+indent_style = space
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+# Go 파일
+[*.go]
+indent_size = 4
+
+# Markdown 파일
+[*.md]
+trim_trailing_whitespace = false
+indent_size = 2
+
+# YAML 파일
+[*.{yml,yaml}]
+indent_size = 2
+
+# JSON 파일
+[*.json]
+indent_size = 2
+
+# Makefile
+[Makefile]
+indent_style = tab
+
+# Shell 스크립트
+[*.sh]
+indent_size = 2

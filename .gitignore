@@ -36,3 +36,7 @@ Thumbs.db
 
 # Compiled Go programs (keep source, remove binary)
 # crdp-cli is generated - can be removed
+
+# Compiled binaries
+crdp-cli
+crdp-cli-*
