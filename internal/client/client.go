@@ -86,8 +86,7 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 	// show-body 옵션이 활성화된 경우 요청 정보 출력
 	if c.showBody {
 		method := "POST"
-		fmt.Printf("\n%s %s\n", method, url)
-		fmt.Printf("%s\n", string(body))
+		fmt.Printf("%s %s\n%s\n", method, url, string(body))
 	}
 
 	// POST 요청 생성
@@ -122,9 +121,7 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 
 	// show-body 옵션이 활성화된 경우 응답 정보 출력
 	if c.showBody {
-		statusText := resp.Status
-		fmt.Printf("%s\n", statusText)
-		fmt.Printf("%s\n", string(respBody))
+		fmt.Print(string(respBody))
 	}
 
 	return &APIResponse{

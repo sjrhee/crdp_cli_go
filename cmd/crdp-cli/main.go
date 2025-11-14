@@ -35,13 +35,18 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --timeout int\n        per-request timeout seconds (default 10)\n")
 		fmt.Fprintf(os.Stderr, "  --verbose\n        enable debug logging\n")
 		fmt.Fprintf(os.Stderr, "  --show-progress\n        show per-iteration progress output\n")
-		fmt.Fprintf(os.Stderr, "  --show-body\n        show request/response URLs and JSON bodies\n")
+		fmt.Fprintf(os.Stderr, "  --show-body\n        show request/response URLs and JSON bodies (auto-enables show-progress)\n")
 		fmt.Fprintf(os.Stderr, "  --bulk\n        use bulk protect/reveal endpoints\n")
 		fmt.Fprintf(os.Stderr, "  --batch-size int\n        batch size for bulk operations (default 50)\n")
 		fmt.Fprintf(os.Stderr, "  --tls\n        use HTTPS instead of HTTP\n")
 	}
 
 	flag.Parse()
+
+	// show-body가 활성화되면 show-progress도 자동 활성화
+	if *showBody {
+		*showProgress = true
+	}
 
 	// 클라이언트 생성
 	c := client.NewClient(*host, *port, *policy, *timeout, *useTLS)
@@ -121,8 +126,13 @@ func main() {
 			}
 
 			if *showProgress {
-				fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n",
-					i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
+				if *showBody {
+					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
+						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
+				} else {
+					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n",
+						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
+				}
 			}
 		}
 	}
