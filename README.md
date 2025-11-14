@@ -5,7 +5,7 @@ CRDP (Cryptographic Redaction Protocol) 커맨드라인 클라이언트의 Go �
 ## 특징
 
 - **의존성 없음**: Go 표준 라이브러리만 사용
-- **정적 바이너리**: 단일 실행 파일로 배포 (약 8.3MB)
+- **정적 바이너리**: 단일 실행 파일로 배포
 - **프로덕션 준비**: 견고한 에러 처리 및 최적화
 
 ## 설치
@@ -60,7 +60,7 @@ go build -o crdp-cli ./cmd/crdp-cli
 ./crdp-cli --host 192.168.0.233 --port 32082
 
 # 특정 데이터부터 시작
-./crdp-cli --start-data 9999999999990 --iterations 10
+./crdp-cli --start-data 1234567890123 --iterations 10
 
 # 진행 상황 확인
 ./crdp-cli --iterations 10 --show-progress
