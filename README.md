@@ -49,6 +49,7 @@ chmod +x crdp-cli-linux-amd64
 | `--host` | API 호스트 주소 | 192.168.0.231 |
 | `--port` | API 포트 번호 | 32082 |
 | `--policy` | 보호 정책 이름 | P03 |
+| `--start-data` | 시작 데이터 (숫자 문자열) | 1234567890123 |
 | `--iterations` | 반복 횟수 | 100 |
 | `--timeout` | 요청 타임아웃 (초) | 10 |
 | `--tls` | HTTPS 사용 | false |
@@ -69,6 +70,9 @@ chmod +x crdp-cli-linux-amd64
 
 # 다른 호스트에 연결
 ./crdp-cli --host 192.168.0.233 --port 32082
+
+# 특정 데이터부터 시작
+./crdp-cli --start-data 9999999999990 --iterations 10
 
 # 진행 상황 확인
 ./crdp-cli --iterations 10 --show-progress

@@ -5,17 +5,28 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/sjrhee/crdp-cli-go/internal/client"
 	"github.com/sjrhee/crdp-cli-go/internal/runner"
 )
 
+// incrementNumericString increments a numeric string by 1
+func incrementNumericString(s string) (string, error) {
+	n, err := strconv.ParseInt(s, 10, 64)
+	if err != nil {
+		return "", fmt.Errorf("not a valid numeric string: %w", err)
+	}
+	return fmt.Sprintf("%d", n+1), nil
+}
+
 func main() {
 	// CLI 플래그 정의
 	host := flag.String("host", "192.168.0.231", "API host")
 	port := flag.Int("port", 32082, "API port")
 	policy := flag.String("policy", "P03", "protection_policy_name")
+	startData := flag.String("start-data", "1234567890123", "numeric data to start from")
 	iterations := flag.Int("iterations", 100, "number of iterations")
 	timeout := flag.Int("timeout", 10, "per-request timeout seconds")
 	verbose := flag.Bool("verbose", false, "enable debug logging")
@@ -31,6 +42,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --host string\n        API host (default \"192.168.0.231\")\n")
 		fmt.Fprintf(os.Stderr, "  --port int\n        API port (default 32082)\n")
 		fmt.Fprintf(os.Stderr, "  --policy string\n        protection_policy_name (default \"P03\")\n")
+		fmt.Fprintf(os.Stderr, "  --start-data string\n        numeric data to start from (default \"1234567890123\")\n")
 		fmt.Fprintf(os.Stderr, "  --iterations int\n        number of iterations (default 100)\n")
 		fmt.Fprintf(os.Stderr, "  --timeout int\n        per-request timeout seconds (default 10)\n")
 		fmt.Fprintf(os.Stderr, "  --verbose\n        enable debug logging\n")
@@ -63,8 +75,20 @@ func main() {
 	if *useBulk {
 		// Bulk 모드: 입력 데이터 생성
 		inputs := make([]string, *iterations)
+		currentData := *startData
 		for i := 0; i < *iterations; i++ {
-			inputs[i] = fmt.Sprintf("1234567890123%d", i)
+			inputs[i] = currentData
+			// 다음 데이터 생성 (숫자 증가)
+			if i < *iterations-1 {
+				nextData, err := incrementNumericString(currentData)
+				if err != nil {
+					if *verbose {
+						log.Printf("Cannot increment data '%s': %v", currentData, err)
+					}
+					break
+				}
+				currentData = nextData
+			}
 		}
 
 		// 배치 단위로 처리
@@ -106,8 +130,9 @@ func main() {
 		}
 	} else {
 		// 일반 모드 (단일 처리)
+		currentData := *startData
 		for i := 1; i <= *iterations; i++ {
-			data := fmt.Sprintf("1234567890123%d", i-1)
+			data := currentData
 			result, err := runner.RunIteration(c, data)
 			if err != nil {
 				if *verbose {
@@ -128,6 +153,18 @@ func main() {
 			if *showProgress {
 				fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
 					i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
+			}
+
+			// 다음 데이터 생성
+			if i < *iterations {
+				nextData, err := incrementNumericString(currentData)
+				if err != nil {
+					if *verbose {
+						log.Printf("Cannot increment data '%s': %v", currentData, err)
+					}
+					break
+				}
+				currentData = nextData
 			}
 		}
 	}
