@@ -121,7 +121,7 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 
 	// show-body 옵션이 활성화된 경우 응답 정보 출력
 	if c.showBody {
-		fmt.Print(string(respBody))
+		fmt.Printf("%s\n", string(respBody))
 	}
 
 	return &APIResponse{

@@ -126,13 +126,8 @@ func main() {
 			}
 
 			if *showProgress {
-				if *showBody {
-					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
-						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
-				} else {
-					fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n",
-						i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
-				}
+				fmt.Fprintf(os.Stderr, "#%03d data=%s time=%.4fs protect_status=%d reveal_status=%d match=%v\n\n",
+					i, data, result.TimeS, result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.Match)
 			}
 		}
 	}
