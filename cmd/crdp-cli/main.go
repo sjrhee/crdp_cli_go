@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/sjrhee/crdp-cli-go/internal/client"
+	"github.com/sjrhee/crdp-cli-go/internal/config"
 	"github.com/sjrhee/crdp-cli-go/internal/runner"
 )
 
@@ -73,19 +74,26 @@ func printIterationProgress(iterNum int, data string, timeS float64, protectStat
 }
 
 func main() {
-	// CLI 플래그 정의
-	host := flag.String("host", "192.168.0.231", "API host")
-	port := flag.Int("port", 32082, "API port")
-	policy := flag.String("policy", "P03", "protection_policy_name")
-	startData := flag.String("start-data", "1234567890123", "numeric data to start from")
-	iterations := flag.Int("iterations", 100, "number of iterations")
-	timeout := flag.Int("timeout", 10, "per-request timeout seconds")
-	verbose := flag.Bool("verbose", false, "enable debug logging")
-	showProgress := flag.Bool("show-progress", false, "show per-iteration progress output")
-	showBody := flag.Bool("show-body", false, "show request/response URLs and JSON bodies")
-	useBulk := flag.Bool("bulk", false, "use bulk protect/reveal endpoints")
-	batchSize := flag.Int("batch-size", 50, "batch size for bulk operations")
-	useTLS := flag.Bool("tls", false, "use HTTPS instead of HTTP")
+	// 설정 파일 로드
+	cfg, err := config.LoadConfig(config.GetConfigPath())
+	if err != nil {
+		log.Printf("Warning: failed to load config file: %v. Using defaults.\n", err)
+		cfg = config.DefaultConfig()
+	}
+
+	// CLI 플래그 정의 (config.yaml에서 읽은 기본값 사용)
+	host := flag.String("host", cfg.API.Host, "API host")
+	port := flag.Int("port", cfg.API.Port, "API port")
+	policy := flag.String("policy", cfg.Protection.Policy, "protection_policy_name")
+	startData := flag.String("start-data", cfg.Execution.StartData, "numeric data to start from")
+	iterations := flag.Int("iterations", cfg.Execution.Iterations, "number of iterations")
+	timeout := flag.Int("timeout", cfg.API.Timeout, "per-request timeout seconds")
+	verbose := flag.Bool("verbose", cfg.Output.Verbose, "enable debug logging")
+	showProgress := flag.Bool("show-progress", cfg.Output.ShowProgress, "show per-iteration progress output")
+	showBody := flag.Bool("show-body", cfg.Output.ShowBody, "show request/response URLs and JSON bodies")
+	useBulk := flag.Bool("bulk", cfg.Batch.Enabled, "use bulk protect/reveal endpoints")
+	batchSize := flag.Int("batch-size", cfg.Batch.Size, "batch size for bulk operations")
+	useTLS := flag.Bool("tls", cfg.API.TLS, "use HTTPS instead of HTTP")
 
 	// 커스텀 Usage 함수로 -- 형식 표시
 	flag.Usage = func() {

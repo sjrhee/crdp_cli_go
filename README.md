@@ -18,16 +18,59 @@ cd crdp_cli_go
 go build -o crdp-cli ./cmd/crdp-cli
 ```
 
+## 설정
+
+### config.yaml
+
+애플리케이션은 `config.yaml` 파일에서 기본값을 읽습니다. 설정 파일은 다음 순서로 검색됩니다:
+
+1. 현재 디렉토리 (`./config.yaml`)
+2. 홈 디렉토리 (`~/.crdp/config.yaml`)
+3. 실행 파일 디렉토리 (`<executable_dir>/config.yaml`)
+
+**config.yaml 예시:**
+
+```yaml
+# API 연결 설정
+api:
+  host: "192.168.0.231"
+  port: 32082
+  timeout: 10
+  tls: false
+
+# 보호 정책 설정
+protection:
+  policy: "P03"
+
+# 반복 실행 설정
+execution:
+  iterations: 100
+  start_data: "1234567890123"
+
+# 배치 처리 설정
+batch:
+  enabled: false
+  size: 50
+
+# 출력 설정
+output:
+  show_progress: false
+  show_body: false
+  verbose: false
+```
+
+CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
+
 ## 사용법
 
 ### 기본 실행
 
 ```bash
-# 기본 설정으로 100회 실행
+# 기본 설정으로 100회 실행 (config.yaml 사용)
 ./crdp-cli
 
 # 반복 횟수 지정
-./crdp-cli -iterations 1000
+./crdp-cli --iterations 1000
 ```
 
 ### 옵션
@@ -82,8 +125,11 @@ crdp_cli_go/
 ├── internal/
 │   ├── client/
 │   │   └── client.go         # CRDP API 클라이언트
+│   ├── config/
+│   │   └── config.go         # 설정 파일 로더
 │   └── runner/
 │       └── runner.go         # 실행 로직 및 검증
+├── config.yaml               # 설정 파일
 ├── go.mod
 └── README.md
 ```
@@ -91,6 +137,7 @@ crdp_cli_go/
 ### 주요 컴포넌트
 
 - **Client**: CRDP API와의 통신 담당 (protect/reveal 호출)
+- **Config**: `config.yaml` 파일 읽기 및 기본값 관리
 - **Runner**: 반복 실행 및 데이터 검증 로직
 
 ## 빌드 옵션

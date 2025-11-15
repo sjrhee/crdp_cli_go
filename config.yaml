@@ -1,0 +1,27 @@
+# CRDP Go CLI Configuration File
+# API 연결 설정
+api:
+  host: "192.168.0.231"
+  port: 32082
+  timeout: 10  # seconds
+  tls: false   # use HTTPS
+
+# 보호 정책 설정
+protection:
+  policy: "P03"
+
+# 반복 실행 설정
+execution:
+  iterations: 100
+  start_data: "1234567890123"
+
+# 배치 처리 설정
+batch:
+  enabled: false
+  size: 50
+
+# 출력 설정
+output:
+  show_progress: false
+  show_body: false
+  verbose: false
