@@ -32,10 +32,22 @@ type Config struct {
 	} `yaml:"batch"`
 
 	Output struct {
-		ShowProgress bool `yaml:"show_progress"`
-		ShowBody     bool `yaml:"show_body"`
-		Verbose      bool `yaml:"verbose"`
+		ShowProgress bool   `yaml:"show_progress"`
+		ShowBody     bool   `yaml:"show_body"`
+		Verbose      bool   `yaml:"verbose"`
+		File         string `yaml:"file"`
 	} `yaml:"output"`
+
+	// crdp_file_converter 호환성 섹션
+	File struct {
+		Delimiter  string `yaml:"delimiter"`
+		Column     int    `yaml:"column"`
+		SkipHeader bool   `yaml:"skip_header"`
+	} `yaml:"file"`
+
+	Parallel struct {
+		Workers int `yaml:"workers"`
+	} `yaml:"parallel"`
 }
 
 // LoadConfig는 config.yaml 파일을 읽어 설정을 로드합니다
@@ -75,6 +87,13 @@ func DefaultConfig() *Config {
 	cfg.Output.ShowProgress = false
 	cfg.Output.ShowBody = false
 	cfg.Output.Verbose = false
+	cfg.Output.File = ""
+	// File 설정 (crdp_file_converter 호환)
+	cfg.File.Delimiter = ","
+	cfg.File.Column = 0
+	cfg.File.SkipHeader = false
+	// Parallel 설정 (crdp_file_converter 호환)
+	cfg.Parallel.Workers = 1
 	return cfg
 }
 

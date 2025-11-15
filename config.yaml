@@ -1,27 +1,44 @@
 # CRDP Go CLI Configuration File
+# 
+# crdp_file_converter와 호환되는 설정 파일 형식
+# 커맨드라인 플래그로 이 값들을 오버라이드할 수 있습니다.
+
 # API 연결 설정
 api:
+  # CRDP API 서버 호스트명 또는 IP 주소
   host: "192.168.0.231"
+  # CRDP API 서버 포트
   port: 32082
-  timeout: 10  # seconds
-  tls: false   # use HTTPS
+  # API 요청 타임아웃 (초 단위)
+  timeout: 10
+  # HTTPS 사용 여부
+  tls: false
 
 # 보호 정책 설정
 protection:
+  # 데이터 보호 정책명
   policy: "P03"
 
 # 반복 실행 설정
 execution:
+  # 반복 횟수
   iterations: 100
+  # 시작 데이터 (숫자 문자열)
   start_data: "1234567890123"
 
 # 배치 처리 설정
 batch:
+  # 배치 처리 활성화 여부
   enabled: false
+  # 한 번의 API 호출에 포함될 데이터 개수
+  # 권장값: 50-200
   size: 50
 
 # 출력 설정
 output:
+  # 진행 상황 표시 여부
   show_progress: false
+  # 응답 본문 표시 여부
   show_body: false
+  # 상세 로그 출력 여부
   verbose: false

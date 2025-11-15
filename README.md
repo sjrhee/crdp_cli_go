@@ -28,6 +28,8 @@ go build -o crdp-cli ./cmd/crdp-cli
 2. 홈 디렉토리 (`~/.crdp/config.yaml`)
 3. 실행 파일 디렉토리 (`<executable_dir>/config.yaml`)
 
+**crdp_file_converter 호환성**: `config.yaml` 구조는 [crdp_file_converter](https://github.com/sjrhee/crdp_file_converter)와 호환됩니다. 동일한 설정 파일을 양쪽 애플리케이션에서 사용할 수 있습니다.
+
 **config.yaml 예시:**
 
 ```yaml
@@ -57,6 +59,16 @@ output:
   show_progress: false
   show_body: false
   verbose: false
+
+# 파일 처리 설정 (crdp_file_converter 호환)
+file:
+  delimiter: ","
+  column: 0
+  skip_header: false
+
+# 병렬 처리 설정 (crdp_file_converter 호환)
+parallel:
+  workers: 1
 ```
 
 CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
