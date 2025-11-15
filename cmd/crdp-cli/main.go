@@ -42,15 +42,16 @@ func generateDataSequence(startData string, count int, verbose bool) []string {
 }
 
 // printSummary prints execution summary
+// printSummary prints execution summary
 func printSummary(attempted, successful, matched int, totalTime time.Duration) {
-	fmt.Printf("\nSummary:\n")
-	fmt.Printf("Iterations attempted: %d\n", attempted)
-	fmt.Printf("Successful (both 2xx): %d\n", successful)
-	fmt.Printf("Revealed matched original data: %d\n", matched)
-	fmt.Printf("Total time: %.4fs\n", totalTime.Seconds())
+	fmt.Printf("\nSummary\n")
+	fmt.Printf("- Iterations attempted: %d\n", attempted)
+	fmt.Printf("- Successful (both 2xx): %d\n", successful)
+	fmt.Printf("- Revealed matched original data: %d\n", matched)
+	fmt.Printf("- Total time: %.4fs\n", totalTime.Seconds())
 	if attempted > 0 {
 		avgTime := totalTime.Seconds() / float64(attempted)
-		fmt.Printf("Average per-iteration time: %.4fs\n", avgTime)
+		fmt.Printf("- Average per-iteration time: %.4fs\n", avgTime)
 	}
 }
 
