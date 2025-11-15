@@ -117,7 +117,10 @@ func main() {
 
 	// 반복 실행
 	startTime := time.Now()
-	var results []*runner.IterationResult
+	
+	// 배치 수 미리 계산하여 슬라이스 용량 사전 할당
+	expectedBatches := (*iterations + *batchSize - 1) / *batchSize
+	results := make([]*runner.IterationResult, 0, expectedBatches)
 	successfulItems := 0
 	matchedItems := 0
 	totalItems := 0

@@ -98,7 +98,11 @@ func RunBulkIteration(c *client.Client, batch []string) (*IterationResult, error
 
 	// 일치 항목 카운트
 	matchedCount := 0
-	for i := 0; i < len(batch) && i < len(restoredList); i++ {
+	maxLen := len(batch)
+	if len(restoredList) < maxLen {
+		maxLen = len(restoredList)
+	}
+	for i := 0; i < maxLen; i++ {
 		if batch[i] == restoredList[i] {
 			matchedCount++
 		}
@@ -141,6 +145,7 @@ func extractProtectedList(resp *client.APIResponse) []string {
 }
 
 // extractRestoredList는 reveal 응답에서 data_array를 추출합니다
+// 최적화: 슬라이스 용량 사전 할당으로 메모리 재할당 최소화
 func extractRestoredList(resp *client.APIResponse) []string {
 	if resp == nil || resp.Body == nil {
 		return []string{}
