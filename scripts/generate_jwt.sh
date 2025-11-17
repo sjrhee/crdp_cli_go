@@ -5,19 +5,17 @@ ISSUER="CRDP03"
 SUBJECT="user01"
 EXPIRY_DAYS=3650  # 10년
 
-PRIKEY="
------BEGIN EC PARAMETERS-----
+PRIKEY="-----BEGIN EC PARAMETERS-----
 BggqhkjOPQMBBw==
 -----END EC PARAMETERS-----
 -----BEGIN EC PRIVATE KEY-----
 MHcCAQEEIE7CQOZPvG7j5MJO82o+WgmqmZkHNqWllLazvkwa5+KJoAoGCCqGSM49
 AwEHoUQDQgAELZo4vTZ1ypjIZB/KzOAeRbS52Z0GsP5nYXcddc2xP16Rm3+bLdib
 0OxWsCm1ltEtg9rM+dXQRXCKlGkMgqnsVw==
------END EC PRIVATE KEY-----
-"
+-----END EC PRIVATE KEY-----"
 
 # ECDSA 공개키 생성
-PUBKEY="$(openssl ec -in <(printf "%s" "$PRIKEY") -pubout 2>/dev/null)"
+PUBKEY=$(echo "$PRIKEY" | openssl ec -pubout 2>/dev/null)
 
 # JWT 헤더, 페이로드
 HEADER=$(echo -n '{"alg":"ES256","typ":"JWT"}' | base64 -w0 | tr '+/' '-_' | tr -d '=')
@@ -26,50 +24,76 @@ PAYLOAD=$(echo -n "{\"exp\":$(date +%s -d "+${EXPIRY_DAYS} days"),\"iss\":\"${IS
 # 서명 메시지
 MESSAGE="${HEADER}.${PAYLOAD}"
 
+# 임시 파일 생성
+KEYFILE=$(mktemp)
+SIGFILE=$(mktemp)
+trap "rm -f $KEYFILE $SIGFILE" EXIT
+
+# 개인키 저장
+echo "$PRIKEY" > "$KEYFILE"
+
 # DER 서명 생성
-TMPDIR=$(mktemp -d)
-trap "rm -rf $TMPDIR" EXIT
+echo -n "$MESSAGE" | openssl dgst -sha256 -sign "$KEYFILE" > "$SIGFILE" 2>/dev/null
 
-DER_SIG=$(echo -n "$MESSAGE" | openssl dgst -sha256 -sign <(printf "%s" "$PRIKEY") 2>/dev/null)
-echo -n "$DER_SIG" > "$TMPDIR/sig.der"
+# 환경 변수에 시그니처 파일 경로 설정
+export SIG_FILE="$SIGFILE"
 
-# DER을 r||s 형식으로 변환 (각 32바이트씩, 총 64바이트)
-# OpenSSL을 사용하여 DER을 r||s로 변환
-RS_SIG=$(python3 -c "
-import sys, base64, subprocess
+# Python을 사용하여 DER을 r||s로 변환
+RS_SIG=$(python3 << 'PYTHON_SCRIPT'
+import base64
+import os
 
-# DER 서명을 r||s로 변환
-der_sig = open(sys.argv[1], 'rb').read()
+# 환경 변수에서 시그니처 파일 경로 받기
+sig_file = os.environ.get('SIG_FILE')
 
-# DER 파싱: SEQUENCE { INTEGER r, INTEGER s }
-def parse_der_int(data, offset):
-    if data[offset] != 0x02:  # INTEGER tag
-        raise ValueError('Not an INTEGER')
-    offset += 1
-    length = data[offset]
-    offset += 1
-    # 상위 바이트가 0x00이면 제거
-    value_bytes = data[offset:offset+length]
-    if len(value_bytes) > 1 and value_bytes[0] == 0x00:
-        value_bytes = value_bytes[1:]
-    return value_bytes, offset + length
+# DER 서명 파일 읽기
+with open(sig_file, 'rb') as f:
+    der_sig = f.read()
 
-# 서명 파싱
-offset = 2  # SEQUENCE 헤더 건너뛰기
-r_bytes, offset = parse_der_int(der_sig, offset)
-s_bytes, offset = parse_der_int(der_sig, offset)
+# DER 구조 파싱: SEQUENCE { INTEGER r, INTEGER s }
+offset = 0
 
-# r, s를 32바이트씩으로 패딩
-r_bytes = r_bytes.rjust(32, b'\x00')[-32:]
-s_bytes = s_bytes.rjust(32, b'\x00')[-32:]
+# SEQUENCE 태그 (0x30)
+if der_sig[offset:offset+1] != b'\x30':
+    raise ValueError("Invalid DER signature")
+offset += 1
 
-# r||s 형식으로 연결 (총 64바이트)
-rs = r_bytes + s_bytes
+# SEQUENCE 길이
+seq_len = der_sig[offset]
+offset += 1
+
+# 첫 번째 INTEGER (r) 파싱
+if der_sig[offset:offset+1] != b'\x02':
+    raise ValueError("Invalid r tag")
+offset += 1
+r_len = der_sig[offset]
+offset += 1
+r_bytes = der_sig[offset:offset+r_len]
+offset += r_len
+
+# 두 번째 INTEGER (s) 파싱
+if der_sig[offset:offset+1] != b'\x02':
+    raise ValueError("Invalid s tag")
+offset += 1
+s_len = der_sig[offset]
+offset += 1
+s_bytes = der_sig[offset:offset+s_len]
+
+# 32바이트로 패딩
+r_padded = (b'\x00' * 32 + r_bytes)[-32:]
+s_padded = (b'\x00' * 32 + s_bytes)[-32:]
+
+# r||s 결합
+rs_sig = r_padded + s_padded
 
 # Base64URL 인코딩
-encoded = base64.urlsafe_b64encode(rs).decode().rstrip('=')
+encoded = base64.urlsafe_b64encode(rs_sig).decode().rstrip('=')
 print(encoded)
-" "$TMPDIR/sig.der")
+PYTHON_SCRIPT
+)
+
+# 환경 변수 해제
+unset SIG_FILE
 
 # 최종 JWT
 JWT="${MESSAGE}.${RS_SIG}"
