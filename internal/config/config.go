@@ -38,6 +38,12 @@ type Config struct {
 		File         string `yaml:"file"`
 	} `yaml:"output"`
 
+	// JWT 인증 설정
+	Auth struct {
+		JWTEnabled bool   `yaml:"jwt_enabled"`
+		JWTToken   string `yaml:"jwt_token"`
+	} `yaml:"auth"`
+
 	// crdp_file_converter 호환성 섹션
 	File struct {
 		Delimiter  string `yaml:"delimiter"`
@@ -88,6 +94,9 @@ func DefaultConfig() *Config {
 	cfg.Output.ShowBody = false
 	cfg.Output.Verbose = false
 	cfg.Output.File = ""
+	// JWT 인증 설정
+	cfg.Auth.JWTEnabled = false
+	cfg.Auth.JWTToken = ""
 	// File 설정 (crdp_file_converter 호환)
 	cfg.File.Delimiter = ","
 	cfg.File.Column = 0

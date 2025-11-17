@@ -42,3 +42,20 @@ output:
   show_body: false
   # 상세 로그 출력 여부
   verbose: false
+
+# JWT 인증 설정
+auth:
+  # JWT 활성화 여부
+  jwt_enabled: false
+  # JWT 토큰 값 (Bearer 토큰)
+  jwt_token: ""
+
+# 파일 처리 설정 (crdp_file_converter 호환)
+file:
+  delimiter: ","
+  column: 0
+  skip_header: false
+
+# 병렬 처리 설정 (crdp_file_converter 호환)
+parallel:
+  workers: 1

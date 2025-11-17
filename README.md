@@ -60,6 +60,13 @@ output:
   show_body: false
   verbose: false
 
+# JWT 인증 설정
+auth:
+  # JWT 활성화 여부
+  jwt_enabled: false
+  # JWT 토큰 값 (Bearer 토큰)
+  jwt_token: ""
+
 # 파일 처리 설정 (crdp_file_converter 호환)
 file:
   delimiter: ","
@@ -101,6 +108,8 @@ CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
 | `--show-body` | HTTP 요청/응답 본문 출력 (자동으로 show-progress 활성화) | false |
 | `--bulk` | 대량 처리 API 사용 (protectbulk/revealbulk) | false |
 | `--batch-size` | 대량 처리 시 배치 크기 | 50 |
+| `--jwt-enabled` | JWT 인증 활성화 | false |
+| `--jwt-token` | JWT 토큰 (Bearer 토큰) | "" |
 
 ### 사용 예시
 
@@ -125,6 +134,9 @@ CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
 
 # 대량 처리 모드 (배치 크기 100)
 ./crdp-cli --bulk --batch-size 100 --iterations 1000
+
+# JWT 토큰으로 인증
+./crdp-cli --jwt-enabled --jwt-token "your-jwt-token-here" --iterations 10
 ```
 
 ## 프로젝트 구조

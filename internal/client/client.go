@@ -19,11 +19,13 @@ type APIResponse struct {
 
 // Client는 CRDP API 클라이언트입니다
 type Client struct {
-	baseURL  string
-	policy   string
-	timeout  time.Duration
-	client   *http.Client
-	showBody bool
+	baseURL    string
+	policy     string
+	timeout    time.Duration
+	client     *http.Client
+	showBody   bool
+	jwtEnabled bool
+	jwtToken   string
 }
 
 // NewClient는 새로운 CRDP 클라이언트를 생성합니다
@@ -60,17 +62,25 @@ func NewClient(host string, port int, policy string, timeoutSec int, useTLS bool
 	}
 
 	return &Client{
-		baseURL:  baseURL,
-		policy:   policy,
-		timeout:  time.Duration(timeoutSec) * time.Second,
-		client:   httpClient,
-		showBody: false,
+		baseURL:    baseURL,
+		policy:     policy,
+		timeout:    time.Duration(timeoutSec) * time.Second,
+		client:     httpClient,
+		showBody:   false,
+		jwtEnabled: false,
+		jwtToken:   "",
 	}
 }
 
 // SetShowBody는 요청/응답 본문 출력 여부를 설정합니다
 func (c *Client) SetShowBody(show bool) {
 	c.showBody = show
+}
+
+// SetJWT는 JWT 토큰과 활성화 여부를 설정합니다
+func (c *Client) SetJWT(enabled bool, token string) {
+	c.jwtEnabled = enabled
+	c.jwtToken = token
 }
 
 // PostJSON은 JSON 페이로드로 POST 요청을 보냅니다
@@ -96,6 +106,11 @@ func (c *Client) PostJSON(endpoint string, payload map[string]interface{}) (*API
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+
+	// JWT 헤더 추가
+	if c.jwtEnabled && c.jwtToken != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.jwtToken))
+	}
 
 	// 요청 전송
 	resp, err := c.client.Do(req)
