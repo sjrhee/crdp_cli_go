@@ -27,7 +27,8 @@ PAYLOAD=$(echo -n "{\"exp\":$(date +%s -d "+${EXPIRY_DAYS} days"),\"iss\":\"${IS
 MESSAGE="${HEADER}.${PAYLOAD}"
 
 # DER 서명 생성 및 Base64URL 변환
-SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -sign <(printf "%s" "$PRIKEY") | base64 -w0 | tr '+/' '-_' | tr -d '=')
+# Note: ECDSA 서명은 DER 형식 (SEQUENCE { INTEGER r, INTEGER s })
+SIGNATURE=$(echo -n "$MESSAGE" | openssl dgst -sha256 -sign <(printf "%s" "$PRIKEY") 2>/dev/null | base64 -w0 | tr '+/' '-_' | tr -d '=')
 
 # 최종 JWT
 JWT="${MESSAGE}.${SIGNATURE}"
