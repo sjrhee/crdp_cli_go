@@ -48,7 +48,7 @@ auth:
   # JWT 활성화 여부
   jwt_enabled: true
   # JWT 토큰 값 (Bearer 토큰)
-  jwt_token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjU5MzcyNjgsImlzcyI6IkNSRFAwMyIsInN1YiI6InVzZXIwMSJ9.fJi_eFsosG2hyTFdtbjPzlz5ytDuQYc5Jy-ri7JVBptxPfLn1Nxhe9GyuU7QwT9lA2D3HBS20EUx4RHhXD_MdQ"
+  jwt_token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwNzg3MjcwODksImlzcyI6IkNSRFAwMyIsInN1YiI6InVzZXIwMSJ9.auwVOTuKZbw0JJmo5HSToUBzPzzQ--CkwtikJUSF1CyplTX3LpjGnvYRyGETGWzbOcWNCogvw7NBWcT6p2B8Rg"
 
 # 파일 처리 설정 (crdp_file_converter 호환)
 file:
