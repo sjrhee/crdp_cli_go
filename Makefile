@@ -1,4 +1,4 @@
-.PHONY: build run test clean help build-all windows linux darwin bench update-deps version fmt lint
+.PHONY: build run test clean help build-all windows linux darwin bench update-deps version fmt lint jwt
 
 # Go 버전 및 바이너리 설정
 GO := go
@@ -18,6 +18,7 @@ help:
 	@echo "  make linux           - Linux 64비트용 빌드"
 	@echo "  make darwin          - macOS 64비트용 빌드"
 	@echo "  make run             - 바이너리 실행 (기본 설정)"
+	@echo "  make jwt             - JWT 토큰 생성 (ECDSA P-256)"
 	@echo "  make test            - 테스트 실행"
 	@echo "  make bench           - 벤치마크 실행"
 	@echo "  make clean           - 빌드 결과물 정리"
@@ -69,6 +70,10 @@ darwin:
 run: build
 	@echo "Running $(BINARY)..."
 	./$(BINARY) --iterations 10
+
+jwt:
+	@echo "Generating JWT token (ECDSA P-256)..."
+	@bash scripts/generate_jwt.sh
 
 test:
 	@echo "Running tests..."
