@@ -94,8 +94,9 @@ func main() {
 	useBulk := flag.Bool("bulk", cfg.Batch.Enabled, "use bulk protect/reveal endpoints")
 	batchSize := flag.Int("batch-size", cfg.Batch.Size, "batch size for bulk operations")
 	useTLS := flag.Bool("tls", cfg.API.TLS, "use HTTPS instead of HTTP")
-	jwtEnabled := flag.Bool("jwt-enabled", cfg.Auth.JWTEnabled, "enable JWT authentication")
-	jwtToken := flag.String("jwt-token", cfg.Auth.JWTToken, "JWT token for authentication")
+	// JWT 플래그: boolean 플래그의 특수성 때문에 문자열로 받아서 처리합니다
+	jwtEnabledFlag := flag.String("jwt-enabled", "", "enable JWT authentication (true/false)")
+	jwtTokenFlag := flag.String("jwt-token", "", "JWT token for authentication")
 
 	// 커스텀 Usage 함수로 -- 형식 표시
 	flag.Usage = func() {
@@ -112,11 +113,21 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --bulk\n        use bulk protect/reveal endpoints\n")
 		fmt.Fprintf(os.Stderr, "  --batch-size int\n        batch size for bulk operations (default 50)\n")
 		fmt.Fprintf(os.Stderr, "  --tls\n        use HTTPS instead of HTTP\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-enabled\n        enable JWT authentication\n")
+		fmt.Fprintf(os.Stderr, "  --jwt-enabled string\n        enable JWT authentication (true/false)\n")
 		fmt.Fprintf(os.Stderr, "  --jwt-token string\n        JWT token for authentication\n")
 	}
 
 	flag.Parse()
+
+	// JWT 설정 처리: config.yaml 기본값 + 플래그 오버라이드
+	jwtEnabled := cfg.Auth.JWTEnabled
+	jwtToken := cfg.Auth.JWTToken
+	if *jwtEnabledFlag != "" {
+		jwtEnabled = *jwtEnabledFlag == "true"
+	}
+	if *jwtTokenFlag != "" {
+		jwtToken = *jwtTokenFlag
+	}
 
 	// show-body가 활성화되면 show-progress도 자동 활성화
 	if *showBody {
@@ -126,7 +137,13 @@ func main() {
 	// 클라이언트 생성
 	c := client.NewClient(*host, *port, *policy, *timeout, *useTLS)
 	c.SetShowBody(*showBody)
-	c.SetJWT(*jwtEnabled, *jwtToken)
+	
+	// verbose 로그 출력
+	if *verbose {
+		log.Printf("Config loaded: JWT enabled=%v, token=%s", jwtEnabled, jwtToken)
+	}
+	
+	c.SetJWT(jwtEnabled, jwtToken)
 
 	// 반복 실행
 	startTime := time.Now()

@@ -46,9 +46,9 @@ output:
 # JWT 인증 설정
 auth:
   # JWT 활성화 여부
-  jwt_enabled: false
+  jwt_enabled: true
   # JWT 토큰 값 (Bearer 토큰)
-  jwt_token: ""
+  jwt_token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NjU5MzcyNjgsImlzcyI6IkNSRFAwMyIsInN1YiI6InVzZXIwMSJ9.fJi_eFsosG2hyTFdtbjPzlz5ytDuQYc5Jy-ri7JVBptxPfLn1Nxhe9GyuU7QwT9lA2D3HBS20EUx4RHhXD_MdQ"
 
 # 파일 처리 설정 (crdp_file_converter 호환)
 file:
