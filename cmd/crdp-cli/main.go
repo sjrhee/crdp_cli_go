@@ -74,24 +74,21 @@ func printIterationProgress(iterNum int, data string, timeS float64, protectStat
 }
 
 func main() {
-	// 모든 플래그 정의
+	// 모든 플래그 정의 (기본값은 공백/0/false로 설정)
 	configPath := flag.String("config", "", "path to config.yaml file (default: auto-search)")
 	
-	// 기본 설정 로드
-	defaultCfg := config.DefaultConfig()
-	
-	// 나머지 CLI 플래그 정의 (기본값 사용)
-	host := flag.String("host", defaultCfg.API.Host, "API host")
-	port := flag.Int("port", defaultCfg.API.Port, "API port")
-	policy := flag.String("policy", defaultCfg.Protection.Policy, "protection_policy_name")
-	startData := flag.String("start-data", defaultCfg.Execution.StartData, "numeric data to start from")
-	iterations := flag.Int("iterations", defaultCfg.Execution.Iterations, "number of iterations")
-	timeout := flag.Int("timeout", defaultCfg.API.Timeout, "per-request timeout seconds")
-	verbose := flag.Bool("verbose", defaultCfg.Output.Verbose, "enable debug logging")
-	showProgress := flag.Bool("show-progress", defaultCfg.Output.ShowProgress, "show per-iteration progress output")
-	showBody := flag.Bool("show-body", defaultCfg.Output.ShowBody, "show request/response URLs and JSON bodies")
-	useBulk := flag.Bool("bulk", defaultCfg.Batch.Enabled, "use bulk protect/reveal endpoints")
-	batchSize := flag.Int("batch-size", defaultCfg.Batch.Size, "batch size for bulk operations")
+	// CLI 플래그 정의 (기본값을 빈 값이나 0으로 설정하여 명시적 제공 여부 감지)
+	host := flag.String("host", "", "API host")
+	port := flag.Int("port", 0, "API port")
+	policy := flag.String("policy", "", "protection_policy_name")
+	startData := flag.String("start-data", "", "numeric data to start from")
+	iterations := flag.Int("iterations", 0, "number of iterations")
+	timeout := flag.Int("timeout", 0, "per-request timeout seconds")
+	verbose := flag.Bool("verbose", false, "enable debug logging")
+	showProgress := flag.Bool("show-progress", false, "show per-iteration progress output")
+	showBody := flag.Bool("show-body", false, "show request/response URLs and JSON bodies")
+	useBulk := flag.Bool("bulk", false, "use bulk protect/reveal endpoints")
+	batchSize := flag.Int("batch-size", 0, "batch size for bulk operations")
 	useTLSFlag := flag.String("tls", "", "use HTTPS (true/false, default: config value)")
 	jwtEnabledFlag := flag.String("jwt-enabled", "", "enable JWT authentication (true/false)")
 	jwtTokenFlag := flag.String("jwt-token", "", "JWT token for authentication")
@@ -131,49 +128,63 @@ func main() {
 	}
 	if err != nil {
 		log.Printf("Warning: failed to load config file: %v. Using defaults.\n", err)
-		cfg = defaultCfg
+		cfg = config.DefaultConfig()
 	}
 
-	// 플래그로 설정된 값이 있으면 config 값을 오버라이드
-	// (플래그가 기본값과 다르면 사용자가 명시적으로 지정한 것)
-	if *host != defaultCfg.API.Host {
-		cfg.API.Host = *host
-	}
-	if *port != defaultCfg.API.Port {
-		cfg.API.Port = *port
-	}
-	if *policy != defaultCfg.Protection.Policy {
-		cfg.Protection.Policy = *policy
-	}
-	if *startData != defaultCfg.Execution.StartData {
-		cfg.Execution.StartData = *startData
-	}
-	if *iterations != defaultCfg.Execution.Iterations {
-		cfg.Execution.Iterations = *iterations
-	}
-	if *timeout != defaultCfg.API.Timeout {
-		cfg.API.Timeout = *timeout
-	}
-	if *verbose != defaultCfg.Output.Verbose {
-		cfg.Output.Verbose = *verbose
-	}
-	if *showProgress != defaultCfg.Output.ShowProgress {
-		cfg.Output.ShowProgress = *showProgress
-	}
-	if *showBody != defaultCfg.Output.ShowBody {
-		cfg.Output.ShowBody = *showBody
-	}
-	if *useBulk != defaultCfg.Batch.Enabled {
-		cfg.Batch.Enabled = *useBulk
-	}
-	if *batchSize != defaultCfg.Batch.Size {
-		cfg.Batch.Size = *batchSize
-	}
-
-	// TLS 플래그 처리: string 형식으로 true/false 지정 가능
-	if *useTLSFlag != "" {
-		cfg.API.TLS = *useTLSFlag == "true"
-	}
+	// CLI 플래그로 설정된 값이 있으면 config 값을 오버라이드
+	// flag.Visit()를 사용하여 실제로 명시적으로 제공된 플래그만 처리
+	flag.Visit(func(f *flag.Flag) {
+		switch f.Name {
+		case "host":
+			if *host != "" {
+				cfg.API.Host = *host
+			}
+		case "port":
+			if *port != 0 {
+				cfg.API.Port = *port
+			}
+		case "policy":
+			if *policy != "" {
+				cfg.Protection.Policy = *policy
+			}
+		case "start-data":
+			if *startData != "" {
+				cfg.Execution.StartData = *startData
+			}
+		case "iterations":
+			if *iterations != 0 {
+				cfg.Execution.Iterations = *iterations
+			}
+		case "timeout":
+			if *timeout != 0 {
+				cfg.API.Timeout = *timeout
+			}
+		case "verbose":
+			cfg.Output.Verbose = *verbose
+		case "show-progress":
+			cfg.Output.ShowProgress = *showProgress
+		case "show-body":
+			cfg.Output.ShowBody = *showBody
+		case "bulk":
+			cfg.Batch.Enabled = *useBulk
+		case "batch-size":
+			if *batchSize != 0 {
+				cfg.Batch.Size = *batchSize
+			}
+		case "tls":
+			if *useTLSFlag != "" {
+				cfg.API.TLS = *useTLSFlag == "true"
+			}
+		case "jwt-enabled":
+			if *jwtEnabledFlag != "" {
+				// jwt-enabled 플래그는 별도 처리
+			}
+		case "jwt-token":
+			if *jwtTokenFlag != "" {
+				// jwt-token 플래그는 별도 처리
+			}
+		}
+	})
 
 	// JWT 설정 처리
 	jwtEnabled := cfg.Auth.JWTEnabled
