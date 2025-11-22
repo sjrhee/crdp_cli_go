@@ -37,16 +37,18 @@ func NewClient(host string, port int, policy string, timeoutSec int, useTLS bool
 
 	baseURL := fmt.Sprintf("%s://%s:%d", protocol, host, port)
 
-	// HTTP 클라이언트 설정 (TCP_NODELAY 효과를 내기 위해 커스텀 Transport 사용)
+	// HTTP 클라이언트 설정
 	transport := &http.Transport{
-		Dial: (&net.Dialer{
+		Proxy: http.ProxyFromEnvironment,
+		DialContext: (&net.Dialer{
 			Timeout:   time.Duration(timeoutSec) * time.Second,
 			KeepAlive: 30 * time.Second,
-		}).Dial,
-		MaxIdleConns:        10,
+		}).DialContext,
+		MaxIdleConns:        100,
 		MaxIdleConnsPerHost: 10,
 		IdleConnTimeout:     90 * time.Second,
 		DisableKeepAlives:   false,
+		ExpectContinueTimeout: time.Second,
 	}
 
 	// TLS 사용 시 인증서 검증 비활성화

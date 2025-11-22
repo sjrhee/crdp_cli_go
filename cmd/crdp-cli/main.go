@@ -13,31 +13,23 @@ import (
 	"github.com/sjrhee/crdp-cli-go/internal/runner"
 )
 
-// incrementNumericString increments a numeric string by 1
-func incrementNumericString(s string) (string, error) {
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return "", fmt.Errorf("not a valid numeric string: %w", err)
-	}
-	return fmt.Sprintf("%d", n+1), nil
-}
-
 // generateDataSequence generates a sequence of data strings starting from startData
-func generateDataSequence(startData string, count int, verbose bool) []string {
+func generateDataSequence(startData string, count int) []string {
 	inputs := make([]string, 0, count)
-	currentData := startData
-	for i := 0; i < count; i++ {
-		inputs = append(inputs, currentData)
-		if i < count-1 {
-			nextData, err := incrementNumericString(currentData)
-			if err != nil {
-				if verbose {
-					log.Printf("Cannot increment data '%s': %v", currentData, err)
-				}
-				break
-			}
-			currentData = nextData
+	
+	// Parse initial value as int64 for efficient incrementing
+	currentNum, err := strconv.ParseInt(startData, 10, 64)
+	if err != nil {
+		// If parse fails, just return the startData repeated
+		for i := 0; i < count; i++ {
+			inputs = append(inputs, startData)
 		}
+		return inputs
+	}
+	
+	// Generate sequence by incrementing numeric value
+	for i := 0; i < count; i++ {
+		inputs = append(inputs, strconv.FormatInt(currentNum+int64(i), 10))
 	}
 	return inputs
 }
@@ -214,18 +206,13 @@ func main() {
 
 	// 반복 실행
 	startTime := time.Now()
-	
-	// 배치 수 미리 계산하여 슬라이스 용량 사전 할당
-	expectedBatches := (cfg.Execution.Iterations + cfg.Batch.Size - 1) / cfg.Batch.Size
-	results := make([]*runner.IterationResult, 0, expectedBatches)
 	successfulItems := 0
 	matchedItems := 0
 	totalItems := 0
-	sumBatchTimes := 0.0
 
 	if cfg.Batch.Enabled {
 		// Bulk 모드: 입력 데이터 생성
-		inputs := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations, cfg.Output.Verbose)
+		inputs := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations)
 
 		// 배치 단위로 처리
 		for i := 0; i < len(inputs); i += cfg.Batch.Size {
@@ -237,25 +224,18 @@ func main() {
 
 			result, err := runner.RunBulkIteration(c, batch)
 			if err != nil {
-			if cfg.Output.Verbose {
-				log.Printf("Error at batch %d: %v", i/cfg.Batch.Size+1, err)
+				if cfg.Output.Verbose {
+					log.Printf("Error at batch %d: %v", i/cfg.Batch.Size+1, err)
 				}
 				continue
 			}
 
-			results = append(results, result)
 			totalItems += len(batch)
-			sumBatchTimes += result.TimeS
 
 			// 성공 및 매칭된 항목 카운트
-			if result.ProtectResponse.StatusCode >= 200 && result.ProtectResponse.StatusCode < 300 &&
-				result.RevealResponse.StatusCode >= 200 && result.RevealResponse.StatusCode < 300 {
-				if result.RestoredCount == len(batch) {
-					successfulItems += len(batch)
-				} else {
-					successfulItems += result.RestoredCount
-				}
-				}
+			if result.Success {
+				successfulItems += result.RestoredCount
+			}
 			matchedItems += result.MatchedCount
 
 			if cfg.Output.ShowProgress {
@@ -265,18 +245,16 @@ func main() {
 		}
 	} else {
 		// 일반 모드 (단일 처리)
-		dataSequence := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations, cfg.Output.Verbose)
+		dataSequence := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations)
 		for i, data := range dataSequence {
 			iterNum := i + 1
 			result, err := runner.RunIteration(c, data)
 			if err != nil {
-				if *verbose {
+				if cfg.Output.Verbose {
 					log.Printf("Error at iteration %d: %v", iterNum, err)
 				}
 				continue
 			}
-
-			results = append(results, result)
 
 			if result.Success {
 				successfulItems++
@@ -299,6 +277,6 @@ func main() {
 	if cfg.Batch.Enabled {
 		printSummary(totalItems, successfulItems, matchedItems, total)
 	} else {
-		printSummary(len(results), successfulItems, matchedItems, total)
+		printSummary(cfg.Execution.Iterations, successfulItems, matchedItems, total)
 	}
 }

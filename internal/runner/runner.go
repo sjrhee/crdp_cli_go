@@ -145,7 +145,6 @@ func extractProtectedList(resp *client.APIResponse) []string {
 }
 
 // extractRestoredList는 reveal 응답에서 data_array를 추출합니다
-// 최적화: 슬라이스 용량 사전 할당으로 메모리 재할당 최소화
 func extractRestoredList(resp *client.APIResponse) []string {
 	if resp == nil || resp.Body == nil {
 		return []string{}
