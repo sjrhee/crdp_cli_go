@@ -99,21 +99,21 @@ func main() {
 	// 커스텀 Usage 함수
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  --config string                           path to config.yaml file (default: auto-search)\n")
-		fmt.Fprintf(os.Stderr, "  --host string                              API host (default \"192.168.0.231\")\n")
-		fmt.Fprintf(os.Stderr, "  --port int                                 API port (default 32082)\n")
-		fmt.Fprintf(os.Stderr, "  --policy string                            protection_policy_name (default \"P03\")\n")
-		fmt.Fprintf(os.Stderr, "  --start-data string                        numeric data to start from (default \"1234567890123\")\n")
-		fmt.Fprintf(os.Stderr, "  --iterations int                           number of iterations (default 100)\n")
-		fmt.Fprintf(os.Stderr, "  --timeout int                              per-request timeout seconds (default 10)\n")
-		fmt.Fprintf(os.Stderr, "  --verbose                                  enable debug logging\n")
-		fmt.Fprintf(os.Stderr, "  --show-progress                            show per-iteration progress output\n")
-		fmt.Fprintf(os.Stderr, "  --show-body                                show request/response URLs and JSON bodies\n")
-		fmt.Fprintf(os.Stderr, "  --bulk                                     use bulk protect/reveal endpoints\n")
-		fmt.Fprintf(os.Stderr, "  --batch-size int                           batch size for bulk operations (default 50)\n")
-		fmt.Fprintf(os.Stderr, "  --tls                                      use HTTPS instead of HTTP\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-enabled string                       enable JWT authentication (true/false)\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-token string                         JWT token for authentication\n")
+		fmt.Fprintf(os.Stderr, "  --config string               path to config.yaml file (default: auto-search)\n")
+		fmt.Fprintf(os.Stderr, "  --host string                 API host (default \"192.168.0.231\")\n")
+		fmt.Fprintf(os.Stderr, "  --port int                    API port (default 32082)\n")
+		fmt.Fprintf(os.Stderr, "  --policy string               protection_policy_name (default \"P03\")\n")
+		fmt.Fprintf(os.Stderr, "  --start-data string           numeric data to start from (default \"1234567890123\")\n")
+		fmt.Fprintf(os.Stderr, "  --iterations int              number of iterations (default 100)\n")
+		fmt.Fprintf(os.Stderr, "  --timeout int                 per-request timeout seconds (default 10)\n")
+		fmt.Fprintf(os.Stderr, "  --verbose                     enable debug logging\n")
+		fmt.Fprintf(os.Stderr, "  --show-progress               show per-iteration progress output\n")
+		fmt.Fprintf(os.Stderr, "  --show-body                   show request/response URLs and JSON bodies\n")
+		fmt.Fprintf(os.Stderr, "  --bulk                        use bulk protect/reveal endpoints\n")
+		fmt.Fprintf(os.Stderr, "  --batch-size int              batch size for bulk operations (default 50)\n")
+		fmt.Fprintf(os.Stderr, "  --tls                         use HTTPS instead of HTTP\n")
+		fmt.Fprintf(os.Stderr, "  --jwt-enabled string          enable JWT authentication (true/false)\n")
+		fmt.Fprintf(os.Stderr, "  --jwt-token string            JWT token for authentication\n")
 	}
 
 	// 플래그 파싱
@@ -224,8 +224,8 @@ func main() {
 
 			result, err := runner.RunBulkIteration(c, batch)
 			if err != nil {
-				if *verbose {
-					log.Printf("Error at batch %d: %v", i/ *batchSize+1, err)
+			if cfg.Output.Verbose {
+				log.Printf("Error at batch %d: %v", i/cfg.Batch.Size+1, err)
 				}
 				continue
 			}
@@ -245,14 +245,14 @@ func main() {
 				}
 			matchedItems += result.MatchedCount
 
-			if *showProgress {
-				printBulkProgress(i/ *batchSize+1, len(batch), result.TimeS,
+			if cfg.Output.ShowProgress {
+				printBulkProgress(i/cfg.Batch.Size+1, len(batch), result.TimeS,
 					result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode, result.MatchedCount)
 			}
 		}
 	} else {
 		// 일반 모드 (단일 처리)
-		dataSequence := generateDataSequence(*startData, *iterations, *verbose)
+		dataSequence := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations, cfg.Output.Verbose)
 		for i, data := range dataSequence {
 			iterNum := i + 1
 			result, err := runner.RunIteration(c, data)
@@ -272,10 +272,10 @@ func main() {
 				matchedItems++
 			}
 
-			if *showProgress {
+			if cfg.Output.ShowProgress {
 				printIterationProgress(iterNum, data, result.TimeS,
 					result.ProtectResponse.StatusCode, result.RevealResponse.StatusCode,
-					result.Match, *showBody)
+					result.Match, cfg.Output.ShowBody)
 			}
 		}
 	}
@@ -283,7 +283,7 @@ func main() {
 	total := time.Since(startTime)
 
 	// 결과 출력
-	if *useBulk {
+	if cfg.Batch.Enabled {
 		printSummary(totalItems, successfulItems, matchedItems, total)
 	} else {
 		printSummary(len(results), successfulItems, matchedItems, total)
