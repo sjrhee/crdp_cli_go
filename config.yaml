@@ -8,7 +8,7 @@ api:
   # CRDP API 서버 호스트명 또는 IP 주소
   host: "192.168.0.231"
   # CRDP API 서버 포트
-  port: 32382
+  port: 32182
   # API 요청 타임아웃 (초 단위)
   timeout: 5
   # HTTPS 사용 여부
@@ -46,9 +46,9 @@ output:
 # JWT 인증 설정
 auth:
   # JWT 활성화 여부
-  jwt_enabled: true
+  jwt: true
   # JWT 토큰 값 (Bearer 토큰)
-  jwt_token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwNzkxNzgwODAsImlzcyI6Imp3dC1pc3N1ZXIiLCJzdWIiOiJkZXYtdXNlcjAxIiwiaWF0IjoxNzYzNjAyMTU2fQ.Z-rpCD-Lz5qLjO-t3X_Ye2_5e7oJLvfBRfmAU9fopK3Tjf5ysOUCaoLO-S3eYn5Xyn-OQbS6xNLnVKumaQQ8sQ"
+  jwt_token: "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjIwNzkzNTU2MjAsImlzcyI6Imp3dC1pc3N1ZXIiLCJzdWIiOiJkZXYtdXNlcjAxIiwiaWF0IjoxNzYzNzc5NjY4fQ.OZ1VDGCEms6_jUEmLaHOWAZjpcBewyI9cBo96Z0Z6ZySWSnHR95vg3nISaLfDiKW6AUO0bl7-9X39r2B8bqVOw"
 
 # 파일 처리 설정 (crdp_file_converter 호환)
 file:

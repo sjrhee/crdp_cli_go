@@ -82,7 +82,7 @@ func main() {
 	useBulk := flag.Bool("bulk", false, "use bulk protect/reveal endpoints")
 	batchSize := flag.Int("batch-size", 0, "batch size for bulk operations")
 	useTLSFlag := flag.String("tls", "", "use HTTPS (true/false, default: config value)")
-	jwtEnabledFlag := flag.String("jwt-enabled", "", "enable JWT authentication (true/false)")
+	jwtFlag := flag.String("jwt", "", "enable JWT authentication (true/false)")
 	jwtTokenFlag := flag.String("jwt-token", "", "JWT token for authentication")
 
 	// 커스텀 Usage 함수
@@ -101,7 +101,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --bulk                   use bulk protect/reveal endpoints\n")
 		fmt.Fprintf(os.Stderr, "  --batch-size int         batch size for bulk operations (default 50)\n")
 		fmt.Fprintf(os.Stderr, "  --tls string             use HTTPS (true/false, default: config value)\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-enabled string     enable JWT authentication (true/false)\n")
+		fmt.Fprintf(os.Stderr, "  --jwt string             enable JWT authentication (true/false)\n")
 		fmt.Fprintf(os.Stderr, "  --jwt-token string       JWT token for authentication\n")
 	}
 
@@ -167,9 +167,9 @@ func main() {
 			if *useTLSFlag != "" {
 				cfg.API.TLS = *useTLSFlag == "true"
 			}
-		case "jwt-enabled":
-			if *jwtEnabledFlag != "" {
-				// jwt-enabled 플래그는 별도 처리
+		case "jwt":
+			if *jwtFlag != "" {
+				// jwt 플래그는 별도 처리
 			}
 		case "jwt-token":
 			if *jwtTokenFlag != "" {
@@ -179,10 +179,10 @@ func main() {
 	})
 
 	// JWT 설정 처리
-	jwtEnabled := cfg.Auth.JWTEnabled
+	jwtEnabled := cfg.Auth.JWT
 	jwtToken := cfg.Auth.JWTToken
-	if *jwtEnabledFlag != "" {
-		jwtEnabled = *jwtEnabledFlag == "true"
+	if *jwtFlag != "" {
+		jwtEnabled = *jwtFlag == "true"
 	}
 	if *jwtTokenFlag != "" {
 		jwtToken = *jwtTokenFlag

@@ -40,8 +40,8 @@ type Config struct {
 
 	// JWT 인증 설정
 	Auth struct {
-		JWTEnabled bool   `yaml:"jwt_enabled"`
-		JWTToken   string `yaml:"jwt_token"`
+		JWT      bool   `yaml:"jwt"`
+		JWTToken string `yaml:"jwt_token"`
 	} `yaml:"auth"`
 
 	// crdp_file_converter 호환성 섹션
@@ -95,7 +95,7 @@ func DefaultConfig() *Config {
 	cfg.Output.Verbose = false
 	cfg.Output.File = ""
 	// JWT 인증 설정
-	cfg.Auth.JWTEnabled = false
+	cfg.Auth.JWT = false
 	cfg.Auth.JWTToken = ""
 	// File 설정 (crdp_file_converter 호환)
 	cfg.File.Delimiter = ","
