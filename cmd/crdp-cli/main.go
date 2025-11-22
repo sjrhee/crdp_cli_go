@@ -92,28 +92,28 @@ func main() {
 	showBody := flag.Bool("show-body", defaultCfg.Output.ShowBody, "show request/response URLs and JSON bodies")
 	useBulk := flag.Bool("bulk", defaultCfg.Batch.Enabled, "use bulk protect/reveal endpoints")
 	batchSize := flag.Int("batch-size", defaultCfg.Batch.Size, "batch size for bulk operations")
-	useTLS := flag.Bool("tls", defaultCfg.API.TLS, "use HTTPS instead of HTTP")
+	useTLSFlag := flag.String("tls", "", "use HTTPS (true/false, default: config value)")
 	jwtEnabledFlag := flag.String("jwt-enabled", "", "enable JWT authentication (true/false)")
 	jwtTokenFlag := flag.String("jwt-token", "", "JWT token for authentication")
 
 	// 커스텀 Usage 함수
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
-		fmt.Fprintf(os.Stderr, "  --config string               path to config.yaml file (default: auto-search)\n")
-		fmt.Fprintf(os.Stderr, "  --host string                 API host (default \"192.168.0.231\")\n")
-		fmt.Fprintf(os.Stderr, "  --port int                    API port (default 32082)\n")
-		fmt.Fprintf(os.Stderr, "  --policy string               protection_policy_name (default \"P03\")\n")
-		fmt.Fprintf(os.Stderr, "  --start-data string           numeric data to start from (default \"1234567890123\")\n")
-		fmt.Fprintf(os.Stderr, "  --iterations int              number of iterations (default 100)\n")
-		fmt.Fprintf(os.Stderr, "  --timeout int                 per-request timeout seconds (default 10)\n")
-		fmt.Fprintf(os.Stderr, "  --verbose                     enable debug logging\n")
-		fmt.Fprintf(os.Stderr, "  --show-progress               show per-iteration progress output\n")
-		fmt.Fprintf(os.Stderr, "  --show-body                   show request/response URLs and JSON bodies\n")
-		fmt.Fprintf(os.Stderr, "  --bulk                        use bulk protect/reveal endpoints\n")
-		fmt.Fprintf(os.Stderr, "  --batch-size int              batch size for bulk operations (default 50)\n")
-		fmt.Fprintf(os.Stderr, "  --tls                         use HTTPS instead of HTTP\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-enabled string          enable JWT authentication (true/false)\n")
-		fmt.Fprintf(os.Stderr, "  --jwt-token string            JWT token for authentication\n")
+		fmt.Fprintf(os.Stderr, "  --config string          path to config.yaml file (default: auto-search)\n")
+		fmt.Fprintf(os.Stderr, "  --host string            API host (default \"192.168.0.231\")\n")
+		fmt.Fprintf(os.Stderr, "  --port int               API port (default 32082)\n")
+		fmt.Fprintf(os.Stderr, "  --policy string          protection_policy_name (default \"P03\")\n")
+		fmt.Fprintf(os.Stderr, "  --start-data string      numeric data to start from (default \"1234567890123\")\n")
+		fmt.Fprintf(os.Stderr, "  --iterations int         number of iterations (default 100)\n")
+		fmt.Fprintf(os.Stderr, "  --timeout int            per-request timeout seconds (default 10)\n")
+		fmt.Fprintf(os.Stderr, "  --verbose                enable debug logging\n")
+		fmt.Fprintf(os.Stderr, "  --show-progress          show per-iteration progress output\n")
+		fmt.Fprintf(os.Stderr, "  --show-body              show request/response URLs and JSON bodies\n")
+		fmt.Fprintf(os.Stderr, "  --bulk                   use bulk protect/reveal endpoints\n")
+		fmt.Fprintf(os.Stderr, "  --batch-size int         batch size for bulk operations (default 50)\n")
+		fmt.Fprintf(os.Stderr, "  --tls string             use HTTPS (true/false, default: config value)\n")
+		fmt.Fprintf(os.Stderr, "  --jwt-enabled string     enable JWT authentication (true/false)\n")
+		fmt.Fprintf(os.Stderr, "  --jwt-token string       JWT token for authentication\n")
 	}
 
 	// 플래그 파싱
@@ -169,8 +169,10 @@ func main() {
 	if *batchSize != defaultCfg.Batch.Size {
 		cfg.Batch.Size = *batchSize
 	}
-	if *useTLS != defaultCfg.API.TLS {
-		cfg.API.TLS = *useTLS
+
+	// TLS 플래그 처리: string 형식으로 true/false 지정 가능
+	if *useTLSFlag != "" {
+		cfg.API.TLS = *useTLSFlag == "true"
 	}
 
 	// JWT 설정 처리
