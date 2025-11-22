@@ -74,45 +74,29 @@ func printIterationProgress(iterNum int, data string, timeS float64, protectStat
 }
 
 func main() {
-	// 설정 파일 경로 플래그 (먼저 정의)
+	// 모든 플래그 정의
 	configPath := flag.String("config", "", "path to config.yaml file (default: auto-search)")
-
-	// 플래그 파싱 전에 config 플래그만 처리하기 위해 특수 처리
-	flag.Parse()
-
-	// 설정 파일 로드
-	var cfg *config.Config
-	var err error
-	if *configPath != "" {
-		// 명시적으로 지정된 config 파일 사용
-		cfg, err = config.LoadConfig(*configPath)
-	} else {
-		// 자동 검색
-		cfg, err = config.LoadConfig(config.GetConfigPath())
-	}
-	if err != nil {
-		log.Printf("Warning: failed to load config file: %v. Using defaults.\n", err)
-		cfg = config.DefaultConfig()
-	}
-
-	// CLI 플래그 다시 정의 (config.yaml에서 읽은 기본값 사용)
-	host := flag.String("host", cfg.API.Host, "API host")
-	port := flag.Int("port", cfg.API.Port, "API port")
-	policy := flag.String("policy", cfg.Protection.Policy, "protection_policy_name")
-	startData := flag.String("start-data", cfg.Execution.StartData, "numeric data to start from")
-	iterations := flag.Int("iterations", cfg.Execution.Iterations, "number of iterations")
-	timeout := flag.Int("timeout", cfg.API.Timeout, "per-request timeout seconds")
-	verbose := flag.Bool("verbose", cfg.Output.Verbose, "enable debug logging")
-	showProgress := flag.Bool("show-progress", cfg.Output.ShowProgress, "show per-iteration progress output")
-	showBody := flag.Bool("show-body", cfg.Output.ShowBody, "show request/response URLs and JSON bodies")
-	useBulk := flag.Bool("bulk", cfg.Batch.Enabled, "use bulk protect/reveal endpoints")
-	batchSize := flag.Int("batch-size", cfg.Batch.Size, "batch size for bulk operations")
-	useTLS := flag.Bool("tls", cfg.API.TLS, "use HTTPS instead of HTTP")
-	// JWT 플래그: boolean 플래그의 특수성 때문에 문자열로 받아서 처리합니다
+	
+	// 기본 설정 로드
+	defaultCfg := config.DefaultConfig()
+	
+	// 나머지 CLI 플래그 정의 (기본값 사용)
+	host := flag.String("host", defaultCfg.API.Host, "API host")
+	port := flag.Int("port", defaultCfg.API.Port, "API port")
+	policy := flag.String("policy", defaultCfg.Protection.Policy, "protection_policy_name")
+	startData := flag.String("start-data", defaultCfg.Execution.StartData, "numeric data to start from")
+	iterations := flag.Int("iterations", defaultCfg.Execution.Iterations, "number of iterations")
+	timeout := flag.Int("timeout", defaultCfg.API.Timeout, "per-request timeout seconds")
+	verbose := flag.Bool("verbose", defaultCfg.Output.Verbose, "enable debug logging")
+	showProgress := flag.Bool("show-progress", defaultCfg.Output.ShowProgress, "show per-iteration progress output")
+	showBody := flag.Bool("show-body", defaultCfg.Output.ShowBody, "show request/response URLs and JSON bodies")
+	useBulk := flag.Bool("bulk", defaultCfg.Batch.Enabled, "use bulk protect/reveal endpoints")
+	batchSize := flag.Int("batch-size", defaultCfg.Batch.Size, "batch size for bulk operations")
+	useTLS := flag.Bool("tls", defaultCfg.API.TLS, "use HTTPS instead of HTTP")
 	jwtEnabledFlag := flag.String("jwt-enabled", "", "enable JWT authentication (true/false)")
 	jwtTokenFlag := flag.String("jwt-token", "", "JWT token for authentication")
 
-	// 커스텀 Usage 함수로 -- 형식 표시
+	// 커스텀 Usage 함수
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
 		fmt.Fprintf(os.Stderr, "  --config string\n        path to config.yaml file (default: auto-search)\n")
@@ -132,9 +116,64 @@ func main() {
 		fmt.Fprintf(os.Stderr, "  --jwt-token string\n        JWT token for authentication\n")
 	}
 
+	// 플래그 파싱
 	flag.Parse()
 
-	// JWT 설정 처리: config.yaml 기본값 + 플래그 오버라이드
+	// 설정 파일 로드
+	var cfg *config.Config
+	var err error
+	if *configPath != "" {
+		// 명시적으로 지정된 config 파일 사용
+		cfg, err = config.LoadConfig(*configPath)
+	} else {
+		// 자동 검색
+		cfg, err = config.LoadConfig(config.GetConfigPath())
+	}
+	if err != nil {
+		log.Printf("Warning: failed to load config file: %v. Using defaults.\n", err)
+		cfg = defaultCfg
+	}
+
+	// 플래그로 설정된 값이 있으면 config 값을 오버라이드
+	// (플래그가 기본값과 다르면 사용자가 명시적으로 지정한 것)
+	if *host != defaultCfg.API.Host {
+		cfg.API.Host = *host
+	}
+	if *port != defaultCfg.API.Port {
+		cfg.API.Port = *port
+	}
+	if *policy != defaultCfg.Protection.Policy {
+		cfg.Protection.Policy = *policy
+	}
+	if *startData != defaultCfg.Execution.StartData {
+		cfg.Execution.StartData = *startData
+	}
+	if *iterations != defaultCfg.Execution.Iterations {
+		cfg.Execution.Iterations = *iterations
+	}
+	if *timeout != defaultCfg.API.Timeout {
+		cfg.API.Timeout = *timeout
+	}
+	if *verbose != defaultCfg.Output.Verbose {
+		cfg.Output.Verbose = *verbose
+	}
+	if *showProgress != defaultCfg.Output.ShowProgress {
+		cfg.Output.ShowProgress = *showProgress
+	}
+	if *showBody != defaultCfg.Output.ShowBody {
+		cfg.Output.ShowBody = *showBody
+	}
+	if *useBulk != defaultCfg.Batch.Enabled {
+		cfg.Batch.Enabled = *useBulk
+	}
+	if *batchSize != defaultCfg.Batch.Size {
+		cfg.Batch.Size = *batchSize
+	}
+	if *useTLS != defaultCfg.API.TLS {
+		cfg.API.TLS = *useTLS
+	}
+
+	// JWT 설정 처리
 	jwtEnabled := cfg.Auth.JWTEnabled
 	jwtToken := cfg.Auth.JWTToken
 	if *jwtEnabledFlag != "" {
@@ -145,17 +184,17 @@ func main() {
 	}
 
 	// show-body가 활성화되면 show-progress도 자동 활성화
-	if *showBody {
-		*showProgress = true
+	if cfg.Output.ShowBody {
+		cfg.Output.ShowProgress = true
 	}
 
 	// 클라이언트 생성
-	c := client.NewClient(*host, *port, *policy, *timeout, *useTLS)
-	c.SetShowBody(*showBody)
+	c := client.NewClient(cfg.API.Host, cfg.API.Port, cfg.Protection.Policy, cfg.API.Timeout, cfg.API.TLS)
+	c.SetShowBody(cfg.Output.ShowBody)
 	
 	// verbose 로그 출력
-	if *verbose {
-		log.Printf("Config loaded: JWT enabled=%v, token=%s", jwtEnabled, jwtToken)
+	if cfg.Output.Verbose {
+		log.Printf("Config loaded: JWT enabled=%v", jwtEnabled)
 	}
 	
 	c.SetJWT(jwtEnabled, jwtToken)
@@ -164,20 +203,20 @@ func main() {
 	startTime := time.Now()
 	
 	// 배치 수 미리 계산하여 슬라이스 용량 사전 할당
-	expectedBatches := (*iterations + *batchSize - 1) / *batchSize
+	expectedBatches := (cfg.Execution.Iterations + cfg.Batch.Size - 1) / cfg.Batch.Size
 	results := make([]*runner.IterationResult, 0, expectedBatches)
 	successfulItems := 0
 	matchedItems := 0
 	totalItems := 0
 	sumBatchTimes := 0.0
 
-	if *useBulk {
+	if cfg.Batch.Enabled {
 		// Bulk 모드: 입력 데이터 생성
-		inputs := generateDataSequence(*startData, *iterations, *verbose)
+		inputs := generateDataSequence(cfg.Execution.StartData, cfg.Execution.Iterations, cfg.Output.Verbose)
 
 		// 배치 단위로 처리
-		for i := 0; i < len(inputs); i += *batchSize {
-			end := i + *batchSize
+		for i := 0; i < len(inputs); i += cfg.Batch.Size {
+			end := i + cfg.Batch.Size
 			if end > len(inputs) {
 				end = len(inputs)
 			}
