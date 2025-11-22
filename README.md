@@ -7,6 +7,7 @@ CRDP (Cryptographic Redaction Protocol) 커맨드라인 클라이언트의 Go �
 - **의존성 없음**: Go 표준 라이브러리만 사용
 - **정적 바이너리**: 단일 실행 파일로 배포
 - **프로덕션 준비**: 견고한 에러 처리 및 최적화
+- **JWT 인증**: ES256 기반 JWT 토큰 지원
 
 ## 설치
 
@@ -63,7 +64,7 @@ output:
 # JWT 인증 설정
 auth:
   # JWT 활성화 여부
-  jwt_enabled: false
+  jwt: false
   # JWT 토큰 값 (Bearer 토큰)
   jwt_token: ""
 
@@ -108,8 +109,10 @@ CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
 | `--show-body` | HTTP 요청/응답 본문 출력 (자동으로 show-progress 활성화) | false |
 | `--bulk` | 대량 처리 API 사용 (protectbulk/revealbulk) | false |
 | `--batch-size` | 대량 처리 시 배치 크기 | 50 |
-| `--jwt-enabled` | JWT 인증 활성화 | false |
+| `--jwt` | JWT 인증 활성화 (true/false) | false |
 | `--jwt-token` | JWT 토큰 (Bearer 토큰) | "" |
+| `--config` | config.yaml 파일 경로 | auto-search |
+| `--tls` | HTTPS 사용 (true/false) | false (설정 파일 참조) |
 
 ### 사용 예시
 
@@ -118,7 +121,7 @@ CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
 ./crdp-cli
 
 # HTTPS로 1000회 실행
-./crdp-cli --tls --port 32182 --iterations 1000
+./crdp-cli --tls true --port 32182 --iterations 1000
 
 # 다른 호스트에 연결
 ./crdp-cli --host 192.168.0.233 --port 32082
@@ -136,7 +139,10 @@ CLI 플래그는 `config.yaml`의 기본값을 **덮어씁니다**.
 ./crdp-cli --bulk --batch-size 100 --iterations 1000
 
 # JWT 토큰으로 인증
-./crdp-cli --jwt-enabled --jwt-token "your-jwt-token-here" --iterations 10
+./crdp-cli --jwt true --jwt-token "your-jwt-token-here" --iterations 10
+
+# 특정 config.yaml 파일 사용
+./crdp-cli --config /path/to/config.yaml --iterations 100
 ```
 
 ## 프로젝트 구조
