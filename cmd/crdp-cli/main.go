@@ -74,14 +74,28 @@ func printIterationProgress(iterNum int, data string, timeS float64, protectStat
 }
 
 func main() {
+	// 설정 파일 경로 플래그 (먼저 정의)
+	configPath := flag.String("config", "", "path to config.yaml file (default: auto-search)")
+
+	// 플래그 파싱 전에 config 플래그만 처리하기 위해 특수 처리
+	flag.Parse()
+
 	// 설정 파일 로드
-	cfg, err := config.LoadConfig(config.GetConfigPath())
+	var cfg *config.Config
+	var err error
+	if *configPath != "" {
+		// 명시적으로 지정된 config 파일 사용
+		cfg, err = config.LoadConfig(*configPath)
+	} else {
+		// 자동 검색
+		cfg, err = config.LoadConfig(config.GetConfigPath())
+	}
 	if err != nil {
 		log.Printf("Warning: failed to load config file: %v. Using defaults.\n", err)
 		cfg = config.DefaultConfig()
 	}
 
-	// CLI 플래그 정의 (config.yaml에서 읽은 기본값 사용)
+	// CLI 플래그 다시 정의 (config.yaml에서 읽은 기본값 사용)
 	host := flag.String("host", cfg.API.Host, "API host")
 	port := flag.Int("port", cfg.API.Port, "API port")
 	policy := flag.String("policy", cfg.Protection.Policy, "protection_policy_name")
@@ -101,6 +115,7 @@ func main() {
 	// 커스텀 Usage 함수로 -- 형식 표시
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "  --config string\n        path to config.yaml file (default: auto-search)\n")
 		fmt.Fprintf(os.Stderr, "  --host string\n        API host (default \"192.168.0.231\")\n")
 		fmt.Fprintf(os.Stderr, "  --port int\n        API port (default 32082)\n")
 		fmt.Fprintf(os.Stderr, "  --policy string\n        protection_policy_name (default \"P03\")\n")
